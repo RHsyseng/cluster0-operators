@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	color "github.com/TwiN/go-color"
-	"github.com/mvazquezc/cluster0-operators/pkg/utils"
+	"github.com/rhsyseng/cluster0-operators/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"

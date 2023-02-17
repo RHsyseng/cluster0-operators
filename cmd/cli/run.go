@@ -2,7 +2,7 @@ package cli
 
 import (
 	"errors"
-	"github.com/mvazquezc/cluster0-operators/pkg/run"
+	"github.com/rhsyseng/cluster0-operators/pkg/run"
 	"github.com/spf13/cobra"
 	"os"
 )

@@ -2,7 +2,7 @@ package main
 
 import (
 	color "github.com/TwiN/go-color"
-	"github.com/mvazquezc/cluster0-operators/cmd/cli"
+	"github.com/rhsyseng/cluster0-operators/cmd/cli"
 	"github.com/spf13/cobra"
 	"log"
 	"os"

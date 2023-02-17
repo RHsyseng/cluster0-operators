@@ -9,7 +9,7 @@ var (
 	version    = "0.0.1"
 	buildTime  = "1970-01-01T00:00:00Z"
 	gitCommit  = "notSet"
-	binaryName = "example-cli"
+	binaryName = "cluster0-operators"
 )
 
 func PrintVersion() string {

@@ -1,0 +1,88 @@
+name: Go App Build
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+#      - name: Run Unit Tests
+#        working-directory: ./
+#        run: |
+#          GOOS=linux GOARCH=amd64 go test -cover  -v . -covermode=count -coverprofile=coverage.out
+#          go tool cover -func=coverage.out -o=/tmp/coverage.out
+
+#      - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
+#        uses: tj-actions/coverage-badge-go@v2
+#        with:
+#          filename: /tmp/coverage.out
+
+#      - name: Verify Changed files
+#        uses: tj-actions/verify-changed-files@v9.1
+#        id: verify-changed-files
+#        with:
+#          files: README.md
+
+#      - name: Commit changes
+#        if: steps.verify-changed-files.outputs.files_changed == 'true'
+#        run: |
+#          git config --local user.email "action@github.com"
+#          git config --local user.name "GitHub Action"
+#          git add README.md
+#          git commit -m "chore: Updated coverage badge."
+
+#      - name: Push changes
+#        if: steps.verify-changed-files.outputs.files_changed == 'true'
+#        uses: ad-m/github-push-action@master
+#        with:
+#          github_token: ${{ github.token }}
+#          branch: ${{ github.head_ref }}
+
+      - name: Run Build
+        working-directory: ./
+        run: make build
+
+      - name: Save CLI Binaries Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: cluster0-operators-binaries
+          path: ./out/
+
+  release:
+    name: Creates a new release with the resulting binaries
+    needs: [build]
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        include:
+          - asset_name: cluster0-operators-linux-amd64
+          - asset_name: cluster0-operators-linux-arm64
+          - asset_name: cluster0-operators-darwin-amd64
+          - asset_name: cluster0-operators-darwin-arm64
+          - asset_name: cluster0-operators-windows-amd64.exe
+    steps:
+      - name: Pull the cli binaries from Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: /tmp/
+
+      - name: Upload binary to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /tmp/ddosify-latencies-binaries/${{ matrix.asset_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}-release
+          release_name: Release ${{ github.sha }}
+          overwrite: true
+          body: "Automatic release created by a GitHub Action"

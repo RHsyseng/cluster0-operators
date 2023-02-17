@@ -3,8 +3,8 @@ package run
 import (
 	"errors"
 	"github.com/TwiN/go-color"
-	"github.com/mvazquezc/cluster0-operators/pkg/olm"
-	"github.com/mvazquezc/cluster0-operators/pkg/utils"
+	"github.com/rhsyseng/cluster0-operators/pkg/olm"
+	"github.com/rhsyseng/cluster0-operators/pkg/utils"
 	"log"
 )
 
