@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/mvazquezc/go-cli-template/pkg/version"
+	"github.com/rhsyseng/cluster0-operators/pkg/version"
 	"github.com/spf13/cobra"
 )
 
