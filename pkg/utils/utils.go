@@ -21,6 +21,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -42,6 +43,8 @@ func ReturnManifestInFolder(folder string) []string {
 			manifests = append(manifests, folder+"/"+file.Name())
 		}
 	}
+	// Sort alphebetically
+	sort.Strings(manifests)
 	return manifests
 }
 

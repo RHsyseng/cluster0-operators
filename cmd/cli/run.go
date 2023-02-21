@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	waitingTime                   int
 	kubeconfigFile                string
 	operatorsInstallManifestsPath string
 	operatorsConfigManifestsPath  string
@@ -26,7 +25,7 @@ func NewRunCommand() *cobra.Command {
 				return err
 			}
 			// We have the run command logic implemented in our example pkg
-			err = run.RunCommandRun(waitingTime, kubeconfigFile, operatorsInstallManifestsPath, operatorsConfigManifestsPath)
+			err = run.RunCommandRun(kubeconfigFile, operatorsInstallManifestsPath, operatorsConfigManifestsPath)
 			if err != nil {
 				return err
 			}
@@ -43,16 +42,12 @@ func addRunCommandFlags(cmd *cobra.Command) {
 	flags.StringVarP(&kubeconfigFile, "kubeconfig", "k", "", "Path to the kubeconfig file to be used. If not set, will default to in-cluster auth")
 	flags.StringVarP(&operatorsInstallManifestsPath, "operators-install-manifests", "i", "", "Path to the folder where manifests for the operators to be installed are present")
 	flags.StringVarP(&operatorsConfigManifestsPath, "operators-config-manifests", "c", "", "Path to the folder where manifests for the operators configurations to be applied are present")
-	flags.IntVarP(&waitingTime, "wait-time", "w", 30, "Seconds to wait while waiting for stuff to happen")
 	cmd.MarkFlagRequired("operators-install-manifests")
 	cmd.MarkFlagRequired("operators-config-manifests")
 }
 
 // validateCommandArgs validates that arguments passed by the user are valid
 func validateRunCommandArgs() error {
-	if waitingTime < 30 {
-		return errors.New("Not valid wait-time parameter. Cannot configure intervals under 30s")
-	}
 	if _, err := os.Stat(operatorsInstallManifestsPath); err != nil {
 		return errors.New("Operators install manifests path " + operatorsInstallManifestsPath + " does not exist.")
 	}

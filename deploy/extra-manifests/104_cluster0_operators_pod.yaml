@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: cluster0-operators
+  name: cluster0-operators
+  namespace: cluster0-operators
+spec:
+  serviceAccountName: cluster0-operators
+  restartPolicy: OnFailure
+  containers:
+    - image: quay.io/mavazque/cluster0-operators:latest
+      name: cluster0-operators
+      args:
+      - run
+      - -i
+      - /var/tmp/operator-install-manifests
+      - -c
+      - /var/tmp/operator-config-manifests
+      volumeMounts:
+      - name: operator-install-manifests
+        mountPath: /var/tmp/operator-install-manifests/
+      - name: operator-config-manifests
+        mountPath: /var/tmp/operator-config-manifests/
+  volumes:
+    - name: operator-install-manifests
+      configMap:
+        name: operator-install-files
+    - name: operator-config-manifests
+      configMap:
+        name: operator-config-files

@@ -16,11 +16,13 @@ import (
 )
 
 const (
-	CVO_MAX_WAIT_SECONDS   = 7200
-	CVO_WAIT_SLEEP_SECONDS = 30
-	SUB_MAX_WAIT_SECONDS   = 300
-	SUB_WAIT_SLEEP_SECONDS = 5
-	STATUS_MAX_RETRIES     = 10
+	CVO_MAX_WAIT_SECONDS           = 7200
+	CVO_WAIT_SLEEP_SECONDS         = 30
+	SUB_MAX_WAIT_SECONDS           = 300
+	API_REQUEST_MAX_RETRIES        = 10
+	API_REQUEST_WAIT_SLEEP_SECONDS = 30
+	SUB_WAIT_SLEEP_SECONDS         = 5
+	STATUS_MAX_RETRIES             = 10
 )
 
 func ApplyManifestsInFolder(client *dynamic.DynamicClient, dClient *discovery.DiscoveryClient, manifestsFiles []string) error {
@@ -63,11 +65,23 @@ func waitForSub(client *dynamic.DynamicClient, obj unstructured.Unstructured) er
 	csvRes := schema.GroupVersionResource{Group: "operators.coreos.com", Version: "v1alpha1", Resource: "clusterserviceversions"}
 	log.Printf(color.InBlue("[INFO] ")+"Waiting for Subscription %s. Timeout %ds, Wait Interval: %ds\n", obj.GetName(), SUB_MAX_WAIT_SECONDS, SUB_WAIT_SLEEP_SECONDS)
 	waitTime := 0
+	subDataRetries := 0
 	subStatusRetries := 0
+	csvDataRetries := 0
 	csvStatusRetries := 0
 	for {
 		subData, err := client.Resource(subRes).Namespace(obj.GetNamespace()).Get(context.TODO(), obj.GetName(), metav1.GetOptions{})
+		// If the error is caused by the api being unreachable, we want to retry before sending the error up
 		if err != nil {
+			if strings.Contains(err.Error(), "refused") {
+				log.Printf(color.InYellow("[WARN] ")+"Couldn't get Subscription. Err: %s. Retries: [%d/%d]\n", err.Error(), subDataRetries, API_REQUEST_MAX_RETRIES)
+				if subDataRetries >= API_REQUEST_MAX_RETRIES {
+					return errors.New("Max retries trying to get Subscription")
+				}
+				subDataRetries += 1
+				time.Sleep(API_REQUEST_WAIT_SLEEP_SECONDS * time.Second)
+				continue
+			}
 			return err
 		}
 		installedCSV, statusFound, err := unstructured.NestedString(subData.Object, "status", "installedCSV")
@@ -77,7 +91,17 @@ func waitForSub(client *dynamic.DynamicClient, obj unstructured.Unstructured) er
 		// Status may not be found, we need to count retries and exit the loop if we couldn't find the installedCSV after X iterations
 		if statusFound {
 			csvData, err := client.Resource(csvRes).Namespace(obj.GetNamespace()).Get(context.TODO(), installedCSV, metav1.GetOptions{})
+			// If the error is caused by the api being unreachable, we want to retry before sending the error up
 			if err != nil {
+				if strings.Contains(err.Error(), "refused") {
+					log.Printf(color.InYellow("[WARN] ")+"Couldn't get ClusterServiceVersion. Err: %s. Retries: [%d/%d]\n", err.Error(), csvDataRetries, API_REQUEST_MAX_RETRIES)
+					if csvDataRetries >= API_REQUEST_MAX_RETRIES {
+						return errors.New("Max retries trying to get ClusterServiceVersion")
+					}
+					csvDataRetries += 1
+					time.Sleep(API_REQUEST_WAIT_SLEEP_SECONDS * time.Second)
+					continue
+				}
 				return err
 			}
 			csvPhase, phaseFound, err := unstructured.NestedString(csvData.Object, "status", "phase")
@@ -115,9 +139,20 @@ func WaitForCVO(client *dynamic.DynamicClient) error {
 	cvoRes := schema.GroupVersionResource{Group: "config.openshift.io", Version: "v1", Resource: "clusterversions"}
 	log.Printf(color.InBlue("[INFO] ")+"Waiting for CVO to finish. Timeout: %ds, Wait Interval: %ds\n", CVO_MAX_WAIT_SECONDS, CVO_WAIT_SLEEP_SECONDS)
 	waitTime := 0
+	cvoRetries := 0
 	for {
 		cvoData, err := client.Resource(cvoRes).Get(context.TODO(), "version", metav1.GetOptions{})
+		// If the error is caused by the api being unreachable, we want to retry before sending the error up
 		if err != nil {
+			if strings.Contains(err.Error(), "refused") {
+				log.Printf(color.InYellow("[WARN] ")+"Couldn't get ClusterVersion. Err: %s. Retries: [%d/%d]\n", err.Error(), cvoRetries, API_REQUEST_MAX_RETRIES)
+				if cvoRetries >= API_REQUEST_MAX_RETRIES {
+					return errors.New("Max retries trying to get ClusterVersion")
+				}
+				cvoRetries += 1
+				time.Sleep(API_REQUEST_WAIT_SLEEP_SECONDS * time.Second)
+				continue
+			}
 			return err
 		}
 		cvoConditions, _, err := unstructured.NestedSlice(cvoData.Object, "status", "conditions")
@@ -129,6 +164,9 @@ func WaitForCVO(client *dynamic.DynamicClient) error {
 			cvoConditionStatus := v.(map[string]interface{})["status"]
 			cvoConditionMessage := v.(map[string]interface{})["message"]
 			if cvoConditionType == "Available" {
+				if cvoConditionMessage == nil {
+					cvoConditionMessage = "Not Ready"
+				}
 				log.Printf(color.InBlue("[INFO] ")+"CVO Finished: %v, Message: %s, Timeout: [%ds/%ds]\n", cvoConditionStatus, cvoConditionMessage, waitTime, CVO_MAX_WAIT_SECONDS)
 				if cvoConditionStatus == "True" {
 					return nil

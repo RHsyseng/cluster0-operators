@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func RunCommandRun(waitingTime int, kubeconfigFile string, operatorsInstallManifestsPath string, operatorsConfigManifestsPath string) error {
+func RunCommandRun(kubeconfigFile string, operatorsInstallManifestsPath string, operatorsConfigManifestsPath string) error {
 	log.Printf(color.InBlue("[INFO] ") + "Cluster0 operators deployer started\n")
 	// Verify manifests folder have yaml files
 	operatorInstallManifests := utils.ReturnManifestInFolder(operatorsInstallManifestsPath)

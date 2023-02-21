@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: operator-config-files
+  namespace: cluster0-operators
+data:
+  00_lvmcluster.yaml: |
+    apiVersion: lvm.topolvm.io/v1alpha1
+    kind: LVMCluster
+    metadata:
+      name: odf-lvmcluster
+      namespace: openshift-storage
+    spec:
+      storage:
+        deviceClasses:
+        - name: vg1
+          thinPoolConfig:
+            name: thin-pool-1
+            sizePercent: 90
+            overprovisionRatio: 10
+  01_rhacm_config.yaml: |
+    apiVersion: operator.open-cluster-management.io/v1
+    kind: MultiClusterHub
+    metadata:
+      name: multiclusterhub
+      namespace: open-cluster-management
+    spec: 
+      availabilityConfig: "Basic"
+  02_mce_config.yaml: |
+    apiVersion: multicluster.openshift.io/v1
+    kind: MultiClusterEngine
+    metadata:
+      name: multiclusterengine
+    spec:
+      availabilityConfig: Basic
+      targetNamespace: multicluster-engine
+    ---
+    apiVersion: agent-install.openshift.io/v1beta1
+    kind: AgentServiceConfig
+    metadata:
+      name: agent
+      namespace: multicluster-engine
+    spec:
+      databaseStorage:
+        storageClassName: lvms-vg1
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+      filesystemStorage:
+        storageClassName: lvms-vg1
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
+      osImages:
+      - cpuArchitecture: x86_64
+        openshiftVersion: "4.11"
+        rootFSUrl: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.11/4.11.0/rhcos-4.11.0-x86_64-live-rootfs.x86_64.img
+        url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.11/4.11.0/rhcos-4.11.0-x86_64-live.x86_64.iso
+        version: 411.86.202208031059-0
+    ---
+    apiVersion: metal3.io/v1alpha1
+    kind: Provisioning
+    metadata:
+      name: provisioning-configuration
+    spec:
+      watchAllNamespaces: true
+  03_openshift_gitops.yaml: |
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: openshift-gitops-clusteradmin
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-admin
+    subjects:
+    - kind: ServiceAccount
+      name: openshift-gitops-argocd-application-controller
+      namespace: openshift-gitops
