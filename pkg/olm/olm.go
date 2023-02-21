@@ -73,7 +73,7 @@ func waitForSub(client *dynamic.DynamicClient, obj unstructured.Unstructured) er
 		subData, err := client.Resource(subRes).Namespace(obj.GetNamespace()).Get(context.TODO(), obj.GetName(), metav1.GetOptions{})
 		// If the error is caused by the api being unreachable, we want to retry before sending the error up
 		if err != nil {
-			if strings.Contains(err.Error(), "refused") {
+			if strings.Contains(err.Error(), "refused") || strings.Contains(err.Error(), "the server was unable to return a response in the time allotted") {
 				log.Printf(color.InYellow("[WARN] ")+"Couldn't get Subscription. Err: %s. Retries: [%d/%d]\n", err.Error(), subDataRetries, API_REQUEST_MAX_RETRIES)
 				if subDataRetries >= API_REQUEST_MAX_RETRIES {
 					return errors.New("Max retries trying to get Subscription")
@@ -93,7 +93,7 @@ func waitForSub(client *dynamic.DynamicClient, obj unstructured.Unstructured) er
 			csvData, err := client.Resource(csvRes).Namespace(obj.GetNamespace()).Get(context.TODO(), installedCSV, metav1.GetOptions{})
 			// If the error is caused by the api being unreachable, we want to retry before sending the error up
 			if err != nil {
-				if strings.Contains(err.Error(), "refused") {
+				if strings.Contains(err.Error(), "refused") || strings.Contains(err.Error(), "the server was unable to return a response in the time allotted") {
 					log.Printf(color.InYellow("[WARN] ")+"Couldn't get ClusterServiceVersion. Err: %s. Retries: [%d/%d]\n", err.Error(), csvDataRetries, API_REQUEST_MAX_RETRIES)
 					if csvDataRetries >= API_REQUEST_MAX_RETRIES {
 						return errors.New("Max retries trying to get ClusterServiceVersion")
@@ -144,7 +144,7 @@ func WaitForCVO(client *dynamic.DynamicClient) error {
 		cvoData, err := client.Resource(cvoRes).Get(context.TODO(), "version", metav1.GetOptions{})
 		// If the error is caused by the api being unreachable, we want to retry before sending the error up
 		if err != nil {
-			if strings.Contains(err.Error(), "refused") {
+			if strings.Contains(err.Error(), "refused") || strings.Contains(err.Error(), "the server was unable to return a response in the time allotted") {
 				log.Printf(color.InYellow("[WARN] ")+"Couldn't get ClusterVersion. Err: %s. Retries: [%d/%d]\n", err.Error(), cvoRetries, API_REQUEST_MAX_RETRIES)
 				if cvoRetries >= API_REQUEST_MAX_RETRIES {
 					return errors.New("Max retries trying to get ClusterVersion")
