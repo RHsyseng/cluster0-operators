@@ -4,11 +4,11 @@ metadata:
   name: operator-install-files
   namespace: cluster0-operators
 data:
-  lso.yaml: |
+  00_lvmso.yaml: |
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: openshift-local-storage
+      name: openshift-storage
       labels:
         openshift.io/cluster-monitoring: "true"
       annotations:
@@ -17,57 +17,28 @@ data:
     apiVersion: operators.coreos.com/v1
     kind: OperatorGroup
     metadata:
-      name: local-storage-operator-operatorgroup
-      namespace: openshift-local-storage
+      name: lvms-operator-operatorgroup
+      namespace: openshift-storage
     spec:
       targetNamespaces:
-      - openshift-local-storage
+      - openshift-storage
     ---
     apiVersion: operators.coreos.com/v1alpha1
     kind: Subscription
     metadata:
-      name: local-storage-operator
-      namespace: openshift-local-storage
+      name: lvms-operator
+      namespace: openshift-storage
     spec:
-      channel: "stable"
-      name: local-storage-operator
-      source: redhat-operators
-      sourceNamespace: openshift-marketplace
-  sriov.yaml: |
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: openshift-sriov-network-operator
-      labels:
-        openshift.io/cluster-monitoring: "true"
-      annotations:
-        workload.openshift.io/allowed: management
-    ---
-    apiVersion: operators.coreos.com/v1
-    kind: OperatorGroup
-    metadata:
-      name: sriov-network-operator-operatorgroup
-      namespace: openshift-sriov-network-operator
-    spec:
-      targetNamespaces:
-      - openshift-sriov-network-operator
-    ---
-    apiVersion: operators.coreos.com/v1alpha1
-    kind: Subscription
-    metadata:
-      name: sriov-network-operator
-      namespace: openshift-sriov-network-operator
-    spec:
-      channel: "stable"
-      name: sriov-network-operator
+      channel: "stable-4.12"
+      name: lvms-operator
       source: redhat-operators
       sourceNamespace: openshift-marketplace
       installPlanApproval: Automatic
-  ptp.yaml: |
+  01_rhacm.yaml: |
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: openshift-ptp
+      name: open-cluster-management
       labels:
         openshift.io/cluster-monitoring: "true"
       annotations:
@@ -76,20 +47,74 @@ data:
     apiVersion: operators.coreos.com/v1
     kind: OperatorGroup
     metadata:
-      name: ptp-operator-operatorgroup
-      namespace: openshift-ptp
+      name: advanced-cluster-management-operatorgroup
+      namespace: open-cluster-management
     spec:
       targetNamespaces:
-      - openshift-ptp
+      - open-cluster-management
     ---
     apiVersion: operators.coreos.com/v1alpha1
     kind: Subscription
     metadata:
-      name: ptp-operator
-      namespace: openshift-ptp
+      name: advanced-cluster-management
+      namespace: open-cluster-management
+    spec:
+      channel: "release-2.7"
+      name: advanced-cluster-management
+      source: redhat-operators
+      sourceNamespace: openshift-marketplace
+      installPlanApproval: Automatic
+  02_mce.yaml: |
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: multicluster-engine
+      labels:
+        openshift.io/cluster-monitoring: "true"
+      annotations:
+        workload.openshift.io/allowed: management
+    ---
+    apiVersion: operators.coreos.com/v1
+    kind: OperatorGroup
+    metadata:
+      name: multicluster-engine-operatorgroup
+      namespace: multicluster-engine
+    spec:
+      targetNamespaces:
+      - multicluster-engine
+    ---
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: multicluster-engine
+      namespace: multicluster-engine
+    spec:
+      channel: "stable-2.2"
+      name: multicluster-engine
+      source: redhat-operators
+      sourceNamespace: openshift-marketplace
+      installPlanApproval: Automatic
+  03_openshift_gitops.yaml: |
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: openshift-gitops-operator
+      namespace: openshift-operators
+    spec:
+      channel: "latest"
+      name: openshift-gitops-operator
+      source: redhat-operators
+      sourceNamespace: openshift-marketplace
+      installPlanApproval: Automatic
+  04_talm.yaml: |
+    apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: topology-aware-lifecycle-manager
+      namespace: openshift-operators
     spec:
       channel: "stable"
-      name: ptp-operator
+      name: topology-aware-lifecycle-manager
       source: redhat-operators
       sourceNamespace: openshift-marketplace
       installPlanApproval: Automatic
